@@ -1,0 +1,89 @@
+services:
+    mysql:
+        image: 'mysql:8.0'
+        container_name: talent_mysql
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD:-password}'
+            MYSQL_DATABASE: '${DB_DATABASE:-talent_match}'
+            MYSQL_USER: '${DB_USERNAME:-sail}'
+            MYSQL_PASSWORD: '${DB_PASSWORD:-password}'
+        ports:
+            - '${DB_PORT:-3306}:3306'
+        volumes:
+            - 'mysql_data:/var/lib/mysql'
+        command: "mysqld --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=64M --key-buffer-size=8M --tmp-table-size=16M --max-connections=50 --performance-schema=0 --skip-name-resolve --default-time-zone=+00:00\n"
+        healthcheck:
+            test:
+                - CMD
+                - mysqladmin
+                - ping
+                - '-h'
+                - localhost
+                - '-u'
+                - root
+                - '-p${DB_PASSWORD:-password}'
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        deploy:
+            resources:
+                limits:
+                    cpus: '1.0'
+                    memory: 512M
+        networks:
+            - talent_match
+    laravel.test:
+        build:
+            context: ./vendor/laravel/sail/runtimes/8.4
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP:-1000}'
+        container_name: talent_app
+        restart: unless-stopped
+        environment:
+            DB_HOST: mysql
+            APP_URL: 'http://localhost:8000'
+        ports:
+            - '8000:80'
+            - '5173:5173'
+        volumes:
+            - '.:/var/www/html'
+        depends_on:
+            - mysql
+        deploy:
+            resources:
+                limits:
+                    cpus: '1.0'
+                    memory: 512M
+        networks:
+            - talent_match
+    phpmyadmin:
+        image: 'phpmyadmin:latest'
+        container_name: talent_phpmyadmin
+        restart: unless-stopped
+        environment:
+            PMA_HOST: mysql
+            PMA_PORT: 3306
+            PMA_USER: root
+            PMA_PASSWORD: '${DB_PASSWORD:-password}'
+            UPLOAD_LIMIT: 64M
+        ports:
+            - '8081:80'
+        depends_on:
+            mysql:
+                condition: service_healthy
+        deploy:
+            resources:
+                limits:
+                    cpus: '0.5'
+                    memory: 256M
+        networks:
+            - talent_match
+volumes:
+    mysql_data: null
+    sail-mysql:
+        driver: local
+networks:
+    talent_match:
+        driver: bridge
