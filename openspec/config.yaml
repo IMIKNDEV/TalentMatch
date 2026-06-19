@@ -1,0 +1,18 @@
+schema: spec-driven
+
+# Project context (optional)
+context: |
+  Tech stack: Laravel 13, PHP 8.5, MySQL 8.0, Docker Sail, laravel/ai SDK
+  Architecture: Structured Output (Couche 1) + Agent/Tools/Memory (Couche 2)
+  Conventions: Form Requests for validation, Eloquent Casts for JSON, Jobs for async AI, Policies for auth
+  Domain: Recruitment platform — job offers (offres), candidates (candidats), AI-powered CV analysis
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
